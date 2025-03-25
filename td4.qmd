@@ -1,0 +1,52 @@
+---
+format: 
+  pdf:
+    documentclass: article
+    classoption: ["a4paper", "12pt", "fleqn"]
+    geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
+    number-sections: true
+    number-depth: 8
+    toc: false  # Désactiver le sommaire automatique
+header-includes: |
+  \usepackage{hyperref}  % Liens cliquables
+  \hypersetup{hidelinks}  % Désactive complètement la mise en couleur des liens
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+\begin{titlepage}
+    \begin{center}
+        {\LARGE \textbf{Séries temporelles univariées}}\\
+        \vspace{0.5cm}
+        {\Large M1 ECAP -- TD1 -- Année 2024/2025}\\
+        
+        \vspace{2cm}
+        
+        {\Large \textbf{TD3 : Saisonnalité}}\\
+        \vspace{0.5cm}
+        \textit{Responsable d'enseignement : Benoît SÉVI}\\
+        \href{mailto:benoit.sevi@univ-nantes.fr}{benoit.sevi@univ-nantes.fr}\\
+        
+        \vspace{1.5cm}
+        
+        {\large \textbf{HOUSSAIS Rémi, QUINTIN DE KERCADIO Pierre}}
+        
+        \vfill
+        
+        {\large \today}
+        
+    \end{center}
+\end{titlepage}
+\begingroup
+\hypersetup{linkcolor=black}
+\tableofcontents
+\endgroup
+
+\newpage
+
+
+
+
+
+
