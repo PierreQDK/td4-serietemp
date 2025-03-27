@@ -749,3 +749,55 @@ Lorsqu'on augmente le nombre de séries générées $N$ à 10000, nous pouvons r
 ## Conclusion générale 
 
 Par conséquent, le fait de changer le nombre de séries générées ne varie pas énormément le taux de rejet de H0. Alors que, le fait de changer à lla baisse ou à la hausse le nombre d'observations fait varier énormément le taux de rejet de H0
+
+
+
+
+
+
+
+
+# Distribution de la statistique de test de Dickey-Fuller pour le modèle sans constante ni tendance via la méthode de Monte Carlo
+
+
+
+```{r}
+set.seed(123)
+
+# Paramètres
+n <- 100         # Longueur de la série
+N <- 10000       # Nombre de simulations
+t_stats <- numeric(N)
+
+for (i in 1:N) {
+  eps <- rnorm(n)
+  Y <- cumsum(eps)  # Y_t = Y_{t-1} + ε_t
+  
+  dY <- diff(Y)            # ΔY_t
+  Y_lag <- Y[-n]           # Y_{t-1}
+  
+  model <- lm(dY ~ 0 + Y_lag)  # régression sans constante
+  t_stats[i] <- summary(model)$coefficients[1, 3]  # t-statistique
+}
+
+# Histogramme
+hist(t_stats, breaks = 50, col = "darkgreen", border = "white",
+     main = "Distribution Monte Carlo de la statistique t du test DF (sans constante)",
+     xlab = "Valeurs de la statistique t")
+
+# Ajout des lignes verticales pour les quantiles critiques
+abline(v = quantiles[1], col = "orange", lwd = 2, lty = 2)
+abline(v = quantiles[2], col = "red", lwd = 2, lty = 2)
+abline(v = quantiles[3], col = "darkred", lwd = 2, lty = 2)
+
+# Ajout d'une légende
+legend("topright", legend = c("10%", "5%", "1%"),
+       col = c("orange", "red", "darkred"),
+       lty = 2, lwd = 2, title = "Seuils")
+# Valeurs critiques empiriques
+quantiles <- quantile(t_stats, probs = c(0.10, 0.05, 0.01))
+print(round(quantiles, 3))
+
+```
+
+
