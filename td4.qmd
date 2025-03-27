@@ -19,7 +19,7 @@ editor:
     \begin{center}
         {\LARGE \textbf{Séries temporelles univariées}}\\
         \vspace{0.5cm}
-        {\Large M1 ECAP -- TD1 -- Année 2024/2025}\\
+        {\Large M1 ECAP -- TD4 -- Année 2024/2025}\\
         
         \vspace{2cm}
         

@@ -252,36 +252,40 @@ ggplot(data, aes(x = Time, y = Value, color = Process)) +
 
 # Exercice 3 : Régressions fallacieuses
 
+# Parrtie 1 
 
-set.seed(123)
+### cumsum() pour créer deux marches aléatoires indépendantes
+set.seed(238)
 
-# Paramètres
-n <- 200       # Longueur des séries
-N <- 5000      # Nombre de simulations
+
+n <- 200       
+N <- 5000     
 rejets <- numeric(N)
 
 for (i in 1:N) {
-  # Simuler deux marches aléatoires indépendantes
+  
   X <- cumsum(rnorm(n))
   Y <- cumsum(rnorm(n))
   
-  # Régression Y ~ X
+
   model <- lm(Y ~ X)
-  p_value <- summary(model)$coefficients[2, 4]  # p-valeur du coefficient de X
+  p_value <- summary(model)$coefficients[2, 4]  
   
-  # Rejet de H0 si p-value < 0.05
+
   rejets[i] <- ifelse(p_value < 0.05, 1, 0)
 }
 
-# Pourcentage de rejets
 pourcentage_rejets <- mean(rejets) * 100
 cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
 
 
 
+# partie 2 changer n et N
 
 
 
+
+# Exercice 4 : Diostribution de la statistique de test de Dickey-Fuller pour le modèle sans constante ni tendance via la méthode de Monte Carlo
 
 
 
