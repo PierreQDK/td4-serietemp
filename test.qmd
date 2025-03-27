@@ -1,135 +1,8 @@
 ---
-format: 
-  pdf:
-    documentclass: article
-    classoption: ["a4paper", "12pt", "fleqn"]
-    geometry: top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm
-    number-sections: true
-    number-depth: 8
-    toc: false  # Désactiver le sommaire automatique
-header-includes: |
-  \usepackage{hyperref}  % Liens cliquables
-  \hypersetup{hidelinks}  % Désactive complètement la mise en couleur des liens
-editor: 
-  markdown: 
-    wrap: 72
+title: "Untitled"
+format: html
+editor: visual
 ---
-
-\begin{titlepage}
-    \begin{center}
-        {\LARGE \textbf{Séries temporelles univariées}}\\
-        \vspace{0.5cm}
-        {\Large M1 ECAP -- TD4 -- Année 2024/2025}\\
-        
-        \vspace{2cm}
-        
-        {\Large \textbf{TD3 : Saisonnalité}}\\
-        \vspace{0.5cm}
-        \textit{Responsable d'enseignement : Benoît SÉVI}\\
-        \href{mailto:benoit.sevi@univ-nantes.fr}{benoit.sevi@univ-nantes.fr}\\
-        
-        \vspace{1.5cm}
-        
-        {\large \textbf{HOUSSAIS Rémi, QUINTIN DE KERCADIO Pierre}}
-        
-        \vfill
-        
-        {\large \today}
-        
-    \end{center}
-\end{titlepage}
-\begingroup
-\hypersetup{linkcolor=black}
-\tableofcontents
-\endgroup
-
-\newpage
-
-
-# Chocs permanents vs. choc transitoires: une analyse exploratoire
-```{r}
-library(stats)
-library(ggplot2)
-
-
-simulate_ar1 <- function(phi, choc_value, choc_time = 100, n = 200) {
-  Y <- numeric(n)
-  eps <- rnorm(n, mean = 0, sd = 1)
-  
-  for (t in 2:n) {
-    Y[t] <- phi * Y[t - 1] + eps[t]
-    if (t == choc_time) {
-      Y[t] <- Y[t] + choc_value
-    }
-  }
-  return(Y)
-}
-
-set.seed(123)
-
-
-phi_vals <- c(0.5, 0.9, 1.0)
-chocs <- c(20, 40, -20, -40)
-
-# Stocker les résultats dans une data.frame
-results <- data.frame()
-
-for (choc in chocs) {
-  for (phi in phi_vals) {
-    serie <- simulate_ar1(phi, choc)
-    df <- data.frame(
-      t = 1:200,
-      Y = serie,
-      phi = paste0("phi = ", phi),
-      choc = paste0("Choc = ", choc)
-    )
-    results <- rbind(results, df)
-  }
-}
-ggplot(results, aes(x = t, y = Y, color = phi)) +
-  geom_line() +
-  facet_wrap(~choc, scales = "free_y") +
-  labs(title = "Impact de chocs à t=100 pour différentes valeurs de ϕ₁",
-       x = "Temps", y = "Y_t") +
-  theme_minimal() +
-  theme(legend.position = "top")
-
-
-library(ggplot2)
-simulate_ar1 <- function(phi, choc_value, choc_time = 100, n = 200) {
-  Y <- numeric(n)
-  eps <- rnorm(n, mean = 0, sd = 1)
-  
-  for (t in 2:n) {
-    Y[t] <- phi * Y[t - 1] + eps[t]
-    if (t == choc_time) {
-      Y[t] <- Y[t] + choc_value
-    }
-  }
-  return(Y)
-}
-
-
-```
-
-**Interprétation**
-
-**Lorsque ϕ=0.5 et ϕ=0.5 :**
-
-Un choc de +20 ou -20 entraîne une perturbation temporaire, mais la série retrouve rapidement son niveau d'avant-choc, en environ 10 unités de temps. Cela s'explique par le fait qu'un faible ϕϕ signifie une mémoire courte : les valeurs passées influencent peu les valeurs futures, et l'effet du choc s'estompe rapidement.
-
-**Lorsque ϕ=0.9ϕ=0.9 :**
-
-Pour un même choc, le retour à l'état initial est bien plus lent, prenant environ 25 unités de temps. Avec une valeur plus élevée de ϕϕ, la série possède une mémoire plus longue, ce qui signifie que les effets du choc persistent plus longtemps avant de s'atténuer.
-
-**Lorsque ϕ=1.0ϕ=1.0 (marche aléatoire) :**
-
-La série ne revient pas à une moyenne stable après le choc. Une fois l’impact survenu, la trajectoire du processus est modifiée de façon durable. Cela illustre bien le fait qu’un AR(1) avec ϕ=1ϕ=1 est non stationnaire : il ne possède pas de force de rappel vers une moyenne fixe, et l’effet du choc se propage indéfiniment avec des fluctuations autour du nouveau niveau atteint.
-
-
-Enfin, lorsque l’intensité du choc passe de 20 à 40 (ou de -20 à -40), les écarts par rapport à l’état initial sont plus marqués, et le temps nécessaire pour s’en rapprocher à nouveau augmente. Cela confirme que plus le choc est fort, plus le processus aura du mal à retrouver son équilibre, surtout pour des valeurs élevées de ϕϕ.
-
-
 
 # TS vs DS : simulation de processus
 
@@ -560,27 +433,12 @@ ggplot(data, aes(x = Time, y = Value, color = Process)) +
 
 Avec ce nouveau tirage aléatoire, ,nous pouvons remarquer le processus déterministe est toujours stable dans le temps et est en dessous du stochastique sur l’ensemble de la période. Nous pouvons remarquer, que à partiur de T=90, TS monte brutalement et reste au dessus du processus déterministe.
 
-
 ### Conclusion
 
-Pour une loi N(0,1), la dynamique globale reste constante : le processus déterministe suit toujours une tendance régulière perturbée temporairement par le bruit, tandis que le processus stochastique affiche une trajectoire plus irrégulière, qui s’écarte progressivement en fonction des chocs accumulés.
+Pour une loi N(0,1), la dynamique globale reste constante : le processus déterministe (rouge) suit toujours une tendance régulière perturbée temporairement par le bruit, tandis que le processus stochastique (bleu) affiche une trajectoire plus irrégulière, qui s’écarte progressivement en fonction des chocs accumulés.
 Avec une variance plus élevée, ces écarts deviennent encore plus marqués. Le TS peut rester en retrait comme dans le deuxième graphique, coller au DT comme dans le premier, ou bien le dépasser largement comme dans le troisième.
 Cette variabilité illustre parfaitement la forte sensibilité du processus stochastique à la réalisation des chocs, qui s’amplifie avec la taille des perturbations.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Ces trois graphiques confirment que le DT est stable et prévisible, tandis que le TS est instable et imprévisible à long terme
 
 
 

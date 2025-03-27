@@ -283,12 +283,59 @@ cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_
 # partie 2 changer n et N
 
 
+set.seed(238)
 
+
+n <- 500       
+N <- 1000     
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+
+
+
+### Exemple 2 
+
+set.seed(238)
+
+
+n <- 50    
+N <- 10000   
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+
+#### Dépend de petit n
 
 # Exercice 4 : Diostribution de la statistique de test de Dickey-Fuller pour le modèle sans constante ni tendance via la méthode de Monte Carlo
-
-
-
 
 
 
