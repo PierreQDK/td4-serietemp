@@ -21,14 +21,14 @@ editor:
         \vspace{0.5cm}
         {\Large M1 ECAP -- TD4 -- Année 2024/2025}\\
         
-        \vspace{2cm}
+        \vspace{8cm}
         
-        {\Large \textbf{TD3 : Saisonnalité}}\\
+        {\Large \textbf{TD4 : Analyse de la non-stationarité et racines unitaires}}\\
         \vspace{0.5cm}
         \textit{Responsable d'enseignement : Benoît SÉVI}\\
         \href{mailto:benoit.sevi@univ-nantes.fr}{benoit.sevi@univ-nantes.fr}\\
         
-        \vspace{1.5cm}
+        \vspace{9cm}
         
         {\large \textbf{HOUSSAIS Rémi, QUINTIN DE KERCADIO Pierre}}
         
