@@ -570,6 +570,10 @@ Cette variabilité illustre parfaitement la forte sensibilité du processus stoc
 
 
 
+## Conlusion générale 
+
+Pour conclrue sur cette partie, nous pouvons remarquer que pour chaque série c'était plus ou moins la m^meme tendance. En effet, le processus déterministe a toujours suivi la tendnace quelque soit la loi N ou le seed, et le processus stochastique a toujours été plus sensible aux fluctuations. 
+
 
 
 
