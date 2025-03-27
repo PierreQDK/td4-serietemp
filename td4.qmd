@@ -133,7 +133,7 @@ Enfin, lorsque l’intensité du choc passe de 20 à 40 (ou de -20 à -40), les 
 
 # TS vs DS : simulation de processus
 
-## Loi N(0,1/4)
+## Loi $N$(0,1/4)
 
 ### Seed(123)
 
@@ -280,7 +280,7 @@ La dynamique globale reste constante : le processus déterministe suit toujours 
 Dans certaines simulations, le TS reste en dessous du DT, dans d’autres il le dépasse, ce qui illustre parfaitement la forte sensibilité du processus stochastique à la réalisation des chocs initiaux.
 Ces trois graphiques confirment que le DT est stable et prévisible, alors que le TS est instable et imprévisible à long terme, malgré des conditions de départ identiques
 
-## Loi N(0,1/2)
+## Loi $N$(0,1/2)
 
 ### Seed(123)
 ```{r}
@@ -418,12 +418,12 @@ Avec ce troisième tirage, le processus stochastique est nettement au dessus sur
 
 ### Conclusion 
 
-Pour une loi N(0,1/2) nous pouvons remarquer que la dynamique reste constante comme sur la loi N(0,1/4). En effet, le processus déterministe suit toujours une tendance régulière, seulement perturbée de manière temporaire par un bruit modéré. En revanche, le processus stochastique  présente une trajectoire plus irrégulière, qui s’écarte progressivement à mesure que les chocs s’accumulent dans le temps.
+Pour une loi $N$(0,1/2) nous pouvons remarquer que la dynamique reste constante comme sur la loi $N$(0,1/4). En effet, le processus déterministe suit toujours une tendance régulière, seulement perturbée de manière temporaire par un bruit modéré. En revanche, le processus stochastique  présente une trajectoire plus irrégulière, qui s’écarte progressivement à mesure que les chocs s’accumulent dans le temps.
 Dans certaines simulations, le TS reste en dessous du DT, dans d’autres il le dépasse nettement, ce qui illustre parfaitement la forte sensibilité du processus stochastique à la réalisation des chocs aléatoires.
 Ces trois graphiques confirment que le DT est stable, tandis que le TS reste instable.
 
 
-## Loi N(0,1)
+## Loi $N$(0,1)
 
 ### Seed(123)
 
@@ -468,7 +468,7 @@ ggplot(data, aes(x = Time, y = Value, color = Process)) +
 
 **Interprétation**
 
-Pour cette loi N(0,1), la dynamique reste la même observée que les deux autres lois. En effet,le processus déterministe suit une trajectoire croissante régulière, alors que le processus stochastique fluctue davantage et s’en écarte par moments. Ici, le TS dépasse nettement le DT autour de t=100. avant de redescendre et de se rapprocher en fin de période. 
+Pour cette loi $N$(0,1), la dynamique reste la même observée que les deux autres lois. En effet,le processus déterministe suit une trajectoire croissante régulière, alors que le processus stochastique fluctue davantage et s’en écarte par moments. Ici, le TS dépasse nettement le DT autour de t=100. avant de redescendre et de se rapprocher en fin de période. 
 
 
 ### Seed(287)
@@ -563,7 +563,7 @@ Avec ce nouveau tirage aléatoire, ,nous pouvons remarquer le processus détermi
 
 ### Conclusion
 
-Pour une loi N(0,1), la dynamique globale reste constante : le processus déterministe suit toujours une tendance régulière perturbée temporairement par le bruit, tandis que le processus stochastique affiche une trajectoire plus irrégulière, qui s’écarte progressivement en fonction des chocs accumulés.
+Pour une loi $N$(0,1), la dynamique globale reste constante : le processus déterministe suit toujours une tendance régulière perturbée temporairement par le bruit, tandis que le processus stochastique affiche une trajectoire plus irrégulière, qui s’écarte progressivement en fonction des chocs accumulés.
 Avec une variance plus élevée, ces écarts deviennent encore plus marqués. Le TS peut rester en retrait comme dans le deuxième graphique, coller au DT comme dans le premier, ou bien le dépasser largement comme dans le troisième.
 Cette variabilité illustre parfaitement la forte sensibilité du processus stochastique à la réalisation des chocs, qui s’amplifie avec la taille des perturbations.
 
@@ -572,21 +572,180 @@ Cette variabilité illustre parfaitement la forte sensibilité du processus stoc
 
 ## Conlusion générale 
 
-Pour conclrue sur cette partie, nous pouvons remarquer que pour chaque série c'était plus ou moins la m^meme tendance. En effet, le processus déterministe a toujours suivi la tendnace quelque soit la loi N ou le seed, et le processus stochastique a toujours été plus sensible aux fluctuations. 
+Pour conclure sur cette partie, nous pouvons remarquer que pour chaque série c'était plus ou moins la m^meme tendance. En effet, le processus déterministe a toujours suivi la tendnace quelque soit la loi N ou le seed, et le processus stochastique a toujours été plus sensible aux fluctuations. 
 
 
 
 
+# Régressions fallacieuses 
+
+## $n$ = 200 et $N$ = 5000
+```{r}
+set.seed(123)
 
 
+n <- 200       
+N <- 5000     
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+
+```
+
+**Interprétation**
+Avec ce premeir test avec $n$=200 et $N$=500, nous obtenons un taux de rejet de HO de 83.52%, par conséquent même si les séries sont indépendantes, nous rejetons HO très souvent. Cela s’explique par le fait que les marches aléatoires sont non stationnaires, en raison de la présence d’une racine unitaire dans leur dynamique.
 
 
+Pour pouvoir observer les differnces nousn allons varier $n$ et $N$
 
 
+## Variations du nombre d'observations,$n$, et du nombre de séries générée, $N$. 
+
+### Augmentation et diminution de $n$
+
+#### $n$ = 50 et $N$ = 5000
+
+```{r}
+set.seed(238)
 
 
+n <- 50    
+N <- 5000   
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+```
+
+**Interprétation**
+
+Lorsqu'on diminue le nombre d'observation $n$ à 50, nous pouvons remarquer que nous obtenons un taux de rejet de HO de 66.14%. Ce qui est inférieur à celui précédent. Par conséquent, quand le nombre d'observation diminue alors on rejete moins à tort. 
 
 
+#### $n$ = 500 et $N$ = 5000
 
 
+```{r}
+set.seed(238)
 
+
+n <- 500   
+N <- 5000   
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+```
+
+**Interprétation**
+
+Lorsqu'on augmente le nombre d'observation $n$ à 50°, nous pouvons remarquer que nous obtenons un taux de rejet de HO de 89.2%. Ce qui est supérieur aux deux précédents. Par conséquent, quand le nombre d'observation augmente alors on rejete plus à tort. 
+
+
+### Augmentation et diminution de $N$
+
+#### $n$ = 200 et $N$ = 2000
+
+```{r}
+set.seed(238)
+
+
+n <- 200   
+N <- 2000   
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+```
+
+**Interprétation**
+
+Lorsqu'on diminue le nombre de séries générées $N$ à 2000, nous pouvons remarquer que nous obtenons un taux de rejet de HO de 83.6%. Ce qui est légérement au dessus du modèle initial. 
+
+#### $n$ = 200 et $N$ = 10000
+```{r}
+set.seed(238)
+
+
+n <- 200   
+N <- 10000   
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  
+  
+  
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+```
+
+**Interprétation**
+
+Lorsqu'on augmente le nombre de séries générées $N$ à 10000, nous pouvons remarquer que nous obtenons un taux de rejet de HO de 83.49%. Ce qui est légérement en dessous du modèle initial. 
+
+
+## Conclusion générale 
+
+Par conséquent, le fait de changer le nombre de séries générées ne varie pas énormément le taux de rejet de H0. Alors que, le fait de changer à lla baisse ou à la hausse le nombre d'observations fait varier énormément le taux de rejet de H0
