@@ -114,15 +114,15 @@ simulate_ar1 <- function(phi, choc_value, choc_time = 100, n = 200) {
 
 **Interprétation**
 
-**Lorsque ϕ=0.5 et ϕ=0.5 :**
+**Lorsque $\phi$=0.5 et $\phi$=0.5 :**
 
 Un choc de +20 ou -20 entraîne une perturbation temporaire, mais la série retrouve rapidement son niveau d'avant-choc, en environ 10 unités de temps. Cela s'explique par le fait qu'un faible ϕϕ signifie une mémoire courte : les valeurs passées influencent peu les valeurs futures, et l'effet du choc s'estompe rapidement.
 
-**Lorsque ϕ=0.9ϕ=0.9 :**
+**Lorsque $\phi$=0.9 $\phi$=0.9 :**
 
 Pour un même choc, le retour à l'état initial est bien plus lent, prenant environ 25 unités de temps. Avec une valeur plus élevée de ϕϕ, la série possède une mémoire plus longue, ce qui signifie que les effets du choc persistent plus longtemps avant de s'atténuer.
 
-**Lorsque ϕ=1.0ϕ=1.0 (marche aléatoire) :**
+**Lorsque $\phi$=1.0 $\phi$=1.0 (marche aléatoire) :**
 
 La série ne revient pas à une moyenne stable après le choc. Une fois l’impact survenu, la trajectoire du processus est modifiée de façon durable. Cela illustre bien le fait qu’un AR(1) avec ϕ=1ϕ=1 est non stationnaire : il ne possède pas de force de rappel vers une moyenne fixe, et l’effet du choc se propage indéfiniment avec des fluctuations autour du nouveau niveau atteint.
 
@@ -179,7 +179,7 @@ ggplot(data, aes(x = Time, y = Value, color = Process)) +
 
 **Interprétation**
 
-Le graphique compare deux séries soumises à un même bruit N(0,1/4): un processus déterministe ( Y_t = 0.2t + \varepsilon*t ), et un processus stochastique ( Y_t = 0.2 + Y*{t-1} + \varepsilon\_t ).
+Le graphique compare deux séries soumises à un même bruit N(0,1/4): un processus déterministe ($Y_t = 0.2t + \varepsilon_t$  ), et un processus stochastique (  $Y_t = 0.2 + Y_{t-1} + \varepsilon_t$ ).
 
 La série déterministe suit une tendance linéaire régulière, perturbée temporairement par de faibles chocs : elle est stationnaire autour d’une tendance.
 En revanche, la série stochastique accumule les chocs dans le temps, ce qui entraîne des écarts de plus en plus marqués : elle est non stationnaire avec des effets de chocs permanents.
