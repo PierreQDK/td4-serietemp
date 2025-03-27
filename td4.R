@@ -163,7 +163,7 @@ data <- data.frame(
 # Graphique
 ggplot(data, aes(x = Time, y = Value, color = Process)) +
   geom_line() +
-  labs(title = "Comparaison entre un processus déterministe et un processus stochastique",
+  labs(title = "Comparaison entre un processus déterministe et un processus stochastique dans une loi N(0,1/4)",
        x = "Temps",
        y = "Valeur de la série") +
   theme_minimal()
@@ -203,7 +203,7 @@ data <- data.frame(
 # Graphique
 ggplot(data, aes(x = Time, y = Value, color = Process)) +
   geom_line() +
-  labs(title = "Comparaison entre un processus déterministe et un processus stochastique",
+  labs(title = "Comparaison entre un processus déterministe et un processus stochastique dans une loi N(0,1/2)",
        x = "Temps",
        y = "Valeur de la série") +
   theme_minimal()
@@ -241,10 +241,67 @@ data <- data.frame(
 # Graphique
 ggplot(data, aes(x = Time, y = Value, color = Process)) +
   geom_line() +
-  labs(title = "Comparaison entre un processus déterministe et un processus stochastique",
+  labs(title = "Comparaison entre un processus déterministe et un processus stochastique dans une loi N(0,1)",
        x = "Temps",
        y = "Valeur de la série") +
   theme_minimal()
+
+
+
+
+
+# Exercice 3 : Régressions fallacieuses
+
+
+set.seed(123)
+
+# Paramètres
+n <- 200       # Longueur des séries
+N <- 5000      # Nombre de simulations
+rejets <- numeric(N)
+
+for (i in 1:N) {
+  # Simuler deux marches aléatoires indépendantes
+  X <- cumsum(rnorm(n))
+  Y <- cumsum(rnorm(n))
+  
+  # Régression Y ~ X
+  model <- lm(Y ~ X)
+  p_value <- summary(model)$coefficients[2, 4]  # p-valeur du coefficient de X
+  
+  # Rejet de H0 si p-value < 0.05
+  rejets[i] <- ifelse(p_value < 0.05, 1, 0)
+}
+
+# Pourcentage de rejets
+pourcentage_rejets <- mean(rejets) * 100
+cat("Pourcentage de rejets de H0 (β1 = 0) au seuil de 5% :", round(pourcentage_rejets, 2), "%\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
