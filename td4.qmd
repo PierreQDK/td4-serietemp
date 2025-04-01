@@ -1053,24 +1053,264 @@ Néanmoins, entre $\delta_0 = 5$ et $\delta_0 = 10$ il n'existe pas de différen
 
 
 
+# Analyse de  la série temporelle du PIB des USA sur la période 1990-2023 
+
+## Représentation graphique du PIB US avec les zones ombrées pour les récessions
+```{r}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(tibbletime)
+library(scales)
+library(lubridate)
+library(tseries)
+library(urca)
+```
+
+```{r}
+# Charger le fichier
+load("data/GDP-US-1990-2023.RData")
+
+# Vérifier le nom de l'objet chargé
+ls()
+```
+
+### Définition des zonées ombrées sous-periode 1990-2019
+```{r}
+df_Y_us2 <- df_Y_us[c(-121:-140),]
+#str(df_Y_us2)
+recessions <- data.frame(
+  start = as.Date(c("1990-07-01", "2001-03-01", "2007-12-01")),
+  end = as.Date(c("1991-03-31", "2001-11-30", "2009-06-30"))
+)
+```
+
+### Graphique
+```{r}
+ggplot(df_Y_us2, aes(x = Date, y = PIB)) +
+  geom_line(color = "blue", size = 1) + # Tracer la ligne du PIB
+  # Ajouter des zones ombrées pour les récessions
+  geom_rect(data = recessions, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            fill = "gray", alpha = 0.5, inherit.aes = FALSE) +
+  labs(title = "Évolution du PIB des États-Unis (1990-2019)",
+       x = "Année", y = "PIB (en milliards de dollars)") +
+  theme_minimal() + # Style minimaliste
+  scale_x_date(labels = date_format("%Y"), breaks = "2 years") # Étiquettes de l'axe X
+```
+**Interprétation**
+
+Tout d'abord, les zones grises représentent les périodes de récession aux États-Unis, telles que définies par le National Bureau of Economic Research. Elles correspondent à des phases où l’activité économique s’est contractée, entraînant un ralentissement voire une baisse du PIB. Visuellement, ces zones permettent de repérer les moments où la dynamique de croissance est interrompue ou infléchie, comme lors de la crise de 2008, qui se traduit ici par une chute marquée du PIB. Elles offrent donc un repère visuel essentiel pour relier les évolutions économiques aux chocs conjoncturels majeurs.
+
+
+On remarque également que chaque zone grisée correspond à une baisse temporaire du PIB ou à une phase de stagnation, contrastant avec le reste de la période où la croissance est continue et soutenue. Cela souligne clairement l’impact des récessions sur la trajectoire de l’économie américaine.
+
+## ACF et PACF de la série
+
+### ACF
+```{r}
+#conversion en série temporelle
+ts_pib <- ts(df_Y_us2$PIB, start = c(1990, 1), frequency = 4) 
+
+
+acf(ts_pib, main = "ACF du PIB des États-Unis de 1990 à 2019")
+```
+**Interprétation**
+
+Le graphique de l’autocorrélation (ACF) du PIB américain sur la période 1990–2019 met en évidence une structure d’une série non stationnaire. L’autocorrélation au premier décalage est très élevée (proche de 1), et les coefficients décroissent lentement sans jamais devenir non significatifs. Cette persistance de la mémoire indique que les valeurs passées du PIB influencent fortement ses valeurs futures, ce qui est caractéristique d’un processus avec racine unitaire.
+
+
+### PACF 
+```{r}
+# PACF
+pacf(ts_pib, main = "PACF du PIB des États-Unis de 1990 à 2019")
+```
+**Interprétation**
+
+Le graphique de la fonction d’autocorrélation partielle (PACF) du PIB en niveau présente une structure très nette : seul le premier lag est significatif, tandis que tous les autres sont proches de zéro et non significatifs au-delà du seuil de confiance. Ce type de découplage brutal après le premier retard est typique d’un processus de type AR(1) non stationnaire, donc d'une marche aléatoire. Ce graphqiue est également typique des bruits blancs.
+
+
+
+## Mise en œuvre de la procédure de test de racine unitaire avec le test de Dickey-Fuller simple puis le test de Dickey-Fuller augmenté.
+
+### Modèle 3: Avec constante et tendance
+```{r}
+# Modèle 3: Avec tendance et constante
+cat("\n--- TEST DF MODÈLE 3: AVEC TENDANCE ET CONSTANTE ---\n")
+# Test de Dickey-Fuller simple
+df_test_modele3 <- ur.df(ts_pib, type = "trend", lags = 0)
+summary(df_test_modele3)
+# Test de Dickey-Fuller augmenté (avec retards sélectionnés automatiquement)
+adf_test_modele3 <- ur.df(ts_pib, type = "trend", selectlags = "AIC")
+summary(adf_test_modele3)
+```
+**Interprétation**
+
+Le test de Dickey Fuller augmenté nous confirme cela  -1,6862 > -3,43, nous rejetons $H₀$ uniquement au seuil de 10%.
+
+Conclusion principale : la série contient toujours une racine unitaire nous pouvons passer au modèle 2.
+
+
+### Modèle 2: Avec constante et sans tendance
+```{r}
+df_test_modele2 <- ur.df(ts_pib, type = "drift", lags = 0)
+summary(df_test_modele2)
+
+adf_test_modele2 <- ur.df(ts_pib, type = "drift", selectlags = "AIC")
+summary(adf_test_modele2)
+```
+**Interprétation**
+
+La statistique de test est supérieure à la valeur critique de -2.88 à 5%, donc nous ne rejetons pas l'hypothèse nulle de racine unitaire. Cela suggère que la série n'est pas stationnaire. Le second modèle nous amène à la même conclusion. Nous devons donc passer au modèle 1 (sans constante ni tendance).
+
+### Modèle 1: Sans constante et tendance
+
+```{r}
+#Test de Dickey-Fuller simple
+    df_test_modele1 <- ur.df(ts_pib, type = "none", lags = 0)
+    summary(df_test_modele1)
+    
+# Test de Dickey-Fuller augmenté
+    adf_test_modele1 <- ur.df(ts_pib, type = "none", selectlags = "AIC")
+    summary(adf_test_modele1)
+```
+**Interprétation**
+
+Les deux tests indiquent que la série possède une racine unitaire, ce qui signifie qu’elle n'est pas stationnaire en niveau. En effet la statistique de test est supérieur à l'ensemble des valeurs critique (exemple avec le DF augmenté: 5.25 > -1.95).
+
+Peu importe le modèle testé (avec ou sans lags), l’hypothèse nulle de non-stationnarité n'est jamais rejetée. La série est donc non stationnaire, ce qui confirme ce qui a été dit avant avec l'ACF et PACF.
+
+
+## Test de stationarité de KPSS
+
+```{r}
+kpss_test <- kpss.test(ts_pib, null = "Trend")
+
+print(kpss_test)
+```
+**Interprétation**
+
+La p-value est faible (0.01 < 0.05), on rejette donc l’hypothèse nulle de stationnarité, la série est non stationnaire.
+Les deux tests confirment que la série est non stationnaire.
+
+
+
+## Analyse avec la période globale (1990-2023)
+
+### Graphique
+```{r}
+recessions <- data.frame(
+  start = as.Date(c("1990-07-01", "2001-03-01", "2007-12-01", "2020-02-01")),
+  end = as.Date(c("1991-03-31", "2001-11-30", "2009-06-30", "2020-04-30"))
+)
+
+
+# Tracer le PIB avec les zones ombrées pour les récessions
+ggplot(df_Y_us, aes(x = Date, y = PIB)) +
+  geom_line(color = "blue", size = 1) + # Tracer la ligne du PIB
+  # Ajouter des zones ombrées pour les récessions
+  geom_rect(data = recessions, aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf), 
+            fill = "gray", alpha = 0.5, inherit.aes = FALSE) +
+  labs(title = "Évolution du PIB des États-Unis (1990-2023)",
+       x = "Année", y = "PIB (en milliards de dollars)") +
+  theme_minimal() + # Style minimaliste
+  scale_x_date(labels = date_format("%Y"), breaks = "2 years") # Étiquettes de l'axe X
+```
+**Interprétation**
+
+Concernant le graphique sur la période complète, on observe les mêmes dynamiques que précédemment : les zones grisées correspondent aux périodes de récession définies par le NBER, durant lesquelles le PIB marque soit un ralentissement, soit une baisse temporaire. À cela s’ajoute désormais la récession liée à la crise du Covid-19 en 2020, bien visible sur le graphique par une chute marquée du PIB. Cette observation confirme que ces phases conjoncturelles ont un impact clair et immédiat sur la trajectoire du PIB américain.
+
+
+### ACF
+```{r}
+#conversion en série temporelle
+ts_pib2 <- ts(df_Y_us$PIB, start = c(1990, 1), frequency = 4) 
+# ACF
+acf(ts_pib2, main = "ACF du PIB des États-Unis de 1990 à 2023")
+```
+**Interprétation**
+
+L’ACF sur la période 1990–2023 présente la même structure qu’auparavant : les autocorrélations sont très élevées au début, et décroissent lentement sans devenir rapidement nulles. Cette persistance confirme que la série est fortement non stationnaire, avec un processus avec racine unitaire.
+Par conséquent, le choc lié à la crise du Covid-19, ne modifie pas la structure fondamentale de la série.
+
+### PACF
+```{r}
+# PACF
+pacf(ts_pib2, main = "PACF du PIB des États-Unis de 1990 à 2023")
+```
+
+**Interprétation**
+
+Le graphique de la PACF confirme les observations faites précédemment : seul le premier lag est significatif, tandis que les suivants sont proches de zéro et non significatifs. Cette structure suggère que le PIB suit toujours une dynamique de type AR(1) non stationnaire. C'est toujours typique des bruits blancs. 
+
+### Choix du modèle adéquat
+
+#### Modèle 3: Avec constante et tendance
+```{r}
+# Modèle 3: Avec tendance et constante
+cat("\n--- TEST DF MODÈLE 3: AVEC TENDANCE ET CONSTANTE ---\n")
+# Test de Dickey-Fuller simple
+df_test_modele3 <- ur.df(ts_pib2, type = "trend", lags = 0)
+summary(df_test_modele3)
+# Test de Dickey-Fuller augmenté (avec retards sélectionnés automatiquement)
+adf_test_modele3 <- ur.df(ts_pib2, type = "trend", selectlags = "AIC")
+summary(adf_test_modele3)
+```
+**Interprétation**
+
+Les résultats du test montrent une p-value de 0.02779 pour la statistique F, ce qui suggère que le modèle est globalement significatif. Cependant, en ce qui concerne la stationnarité, la valeur de la statistique de test est de -2.5593, tandis que la valeur critique à 5% est -3.43. Comme la statistique de test est supérieure à la valeur critique, on ne rejette pas l'hypothèse nulle de présence d'une racine unitaire. Cela signifie que la série est non stationnaire.
 
 
 
 
+#### Modèle 2: Avec constante et sans tendance
+```{r}
+df_test_modele2 <- ur.df(ts_pib2, type = "drift", lags = 0)
+summary(df_test_modele2)
+
+adf_test_modele2 <- ur.df(ts_pib2, type = "drift", selectlags = "AIC")
+summary(adf_test_modele2)
+```
+**Interprétation**
+
+La statistique des deux tests est de 0.5829 et 0.7809, qui est supérieure à la valeur critique de -2.88 à 5%, donc nous ne rejetons pas l'hypothèse nulle de présence d'une racine unitaire. Cela suggère que la série est non stationnaire. Par conséquent, nous passons au modèle 1
 
 
+#### Modèle 1: Sans constante et tendance
 
+```{r}
+#Test de Dickey-Fuller simple
+    df_test_modele1 <- ur.df(ts_pib2, type = "none", lags = 0)
+    summary(df_test_modele1)
+    
+# Test de Dickey-Fuller augmenté
+    adf_test_modele1 <- ur.df(ts_pib2, type = "none", selectlags = "AIC")
+    summary(adf_test_modele1)
+```
+**Interprétation**
 
+Les deux tests indiquent que la série n'est pas stationnaire en niveau, car elle présente une racine unitaire. En effet, la statistique de test est supérieure à l'ensemble des valeurs critiques (par exemple, avec le test de Dickey-Fuller augmenté : 5.8175 > -1.95).
 
+Peu importe le modèle testé (avec ou sans retards), l'hypothèse nulle de présence d'une racine unitaire n'est jamais rejetée. Cela confirme que la série est non stationnaire, ce qui est également cohérent avec les résultats obtenus précédemment à partir de l'ACF et PACF.
 
+###Test de stationarité de KPSS
 
+```{r}
+kpss_test <- kpss.test(ts_pib2, null = "Trend")
 
+print(kpss_test)
+```
 
+**Interprétation**
 
+Le test de KPSS appliqué au PIB sur la période 1990–2023 donne une statistique de test de 0.2339, avec une p-value inférieure à 0.01.
 
+Cela signifie que l’on rejette l’hypothèse nulle de stationnarité autour d’une tendance, même au seuil de 1%. Par cosnéquent, le test suggère que la série n’est pas stationnaire, ce qui vient confirmer les résultats des tests de Dickey-Fuller ainsi que l’analyse visuelle de l’ACF et de la PACF.
 
+### Conclusion de la période globale (1990-2023)
 
+Après avoir appliqué l’ensemble des tests de stationnarité sur la période étendue de 1990 à 2023, nous parvenons aux mêmes conclusions que précédemment (1990–2019) : la série du PIB reste non stationnaire et présente une racine unitaire, quels que soient les modèles testés (avec ou sans constante, avec ou sans tendance).
 
+Les résultats des tests de Dickey-Fuller (simples et augmentés), tout comme ceux du test de KPSS, confirment la non-stationnarité observée visuellement dans les graphiques ACF et PACF. Ainsi, l’allongement de la période n’altère pas la dynamique structurelle de la série, et vient renforcer les constats établis sur la période initiale.
 
 
 
