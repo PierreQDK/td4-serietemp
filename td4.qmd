@@ -759,7 +759,7 @@ Par conséquent, le fait de changer le nombre de séries générées ne varie pa
 
 # Distribution de la statistique de test de Dickey-Fuller pour le modèle sans constante ni tendance via la méthode de Monte Carlo
 
-
+## Distribution du modèle (1) sans constante ni tendance $Y_t = Y_{t-1} + \varepsilon_t$
 
 ```{r}
 set.seed(123)
@@ -780,9 +780,13 @@ for (i in 1:N) {
   t_stats[i] <- summary(model)$coefficients[1, 3]  # t-statistique
 }
 
+# Valeurs critiques empiriques
+quantiles <- quantile(t_stats, probs = c(0.10, 0.05, 0.01))
+print(round(quantiles, 3))
+
 # Histogramme
 hist(t_stats, breaks = 50, col = "darkgreen", border = "white",
-     main = "Distribution Monte Carlo de la statistique t du test DF (sans constante)",
+     main = "Distribution Monte Carlo du modèle (1)",
      xlab = "Valeurs de la statistique t")
 
 # Ajout des lignes verticales pour les quantiles critiques
@@ -794,10 +798,280 @@ abline(v = quantiles[3], col = "darkred", lwd = 2, lty = 2)
 legend("topright", legend = c("10%", "5%", "1%"),
        col = c("orange", "red", "darkred"),
        lty = 2, lwd = 2, title = "Seuils")
-# Valeurs critiques empiriques
-quantiles <- quantile(t_stats, probs = c(0.10, 0.05, 0.01))
-print(round(quantiles, 3))
 
 ```
+
+
+**Interprétation**
+
+Pour ce modèle, sans constante ni tendance nous pouvons observer plusieurs indications. 
+En effet, les valeurs critiques issues de la simulation du modèle (1) sont très proches de celles de la table théorique de Dickey-Fuller :
+
+| Seuil     | Monte Carlo | Table DF (n = 100) |
+|-----------|-------------|--------------------|
+| 10%       | -1.630      | -1.61              |
+| 5%        | -1.988      | -1.95              |
+| 1%        | -2.633      | -2.60              |
+
+
+En simulant 10 000 séries de 100 observations d’un processus à racine unitaire sans constante ni tendance, nous obtenons une distribution empirique de la statistique t du test de Dickey-Fuller. Les seuils de rejet à 10 %, 5 % et 1 % obtenus sont respectivement de -1.630, -1.988 et -2.633. Et lorsque l’on compare ces valeurs à celles issues de la table théorique de Dickey-Fuller, on observe une très bonne similitude avec des valeurs respectives de -1.61, -1.95 et -2.60 pour les mêmes seuils de rejet. 
+
+## Distribution du modèle (2) avec $\delta_0 = 5$
+
+
+```{r}
+set.seed(123)
+
+n_simulations <- 10000
+n_obs <- 100
+
+# Fonction pour générer une marche aléatoire avec constante
+generate_random_walk_avec_const <- function(n, delta0) {
+  Yt <- numeric(n)
+  Yt[1] <- delta0  # Initialisation avec la constante
+  for (t in 2:n) {
+    Yt[t] <- Yt[t-1] + rnorm(1)
+  }
+  return(Yt)
+}
+
+# Fonction pour exécuter la simulation et afficher les résultats
+simulation_cst <- function(delta0) {
+  set.seed(123)  # Réinitialisation de la graine pour reproductibilité
+  
+  t_stats <- numeric(n_simulations)  # Réinitialisation à chaque appel
+  
+  for (i in 1:n_simulations) {
+    Yt <- generate_random_walk_avec_const(n_obs, delta0)
+    
+    dYt <- diff(Yt)
+    Yt_lag <- Yt[-n_obs]
+    
+    model <- lm(dYt ~ Yt_lag)  # Régression avec constante par défaut
+    t_stats[i] <- summary(model)$coefficients[2, 3]  # Récupération du t-stat
+  }
+  
+  # Calcul des quantiles (valeurs critiques)
+  quantiles <- quantile(t_stats, c(0.10, 0.05, 0.01))
+  
+  # Affichage graphique
+  hist(t_stats, breaks = 50, probability = TRUE, col = "royalblue", border = "white",
+       main = paste("Distribution Monte Carlo des t-stat de Dickey-Fuller (δ0 =", delta0, ")"),
+       xlab = "Valeur de la statistique t", ylab = "Densité")
+  lines(density(t_stats), col = "royalblue", lwd = 2)
+  abline(v = quantiles, col = c("orange", "red", "darkred"), lwd = 2, lty = 2)
+  legend("topright", legend = c("Densité estimée", "Quantile 10%", "Quantile 5%", "Quantile 1%"),
+         col = c("royalblue", "orange", "red", "darkred"), lwd = 2, cex = 0.5, lty = c(1, 2, 2, 2))
+  
+  # Affichage des valeurs critiques
+  cat("Valeurs critiques obtenues pour δ0 =", delta0, ":\n")
+  print(quantiles)
+}
+
+
+simulation_cst(delta0 = 5)
+#simulation_cst(delta0 = 10)
+```
+
+**Interprétation**
+
+
+En introduisant une constante $\delta_0 = 5$ dans le processus simulé, nous observons que la distribution empirique de la statistique t est nettement déplacée vers la gauche par rapport à la distribution théorique attendue pour le test de Dickey-Fuller avec constante.
+
+| Seuil     | Monte Carlo | Table DF (n = 100) |
+|-----------|-------------|--------------------|
+| 10%       | -2.590     | -1.61              |
+| 5%        | -2.885     | -1.95              |
+| 1%        | -3.476      | -2.60              |
+
+En effet, nous pouvons observer que pour $\delta_0 = 5$ les seuils de rejet s'éloignent de ceux de la table de Dickey-Fuller. 
+
+Par conséquent, d'après cette première analyse nous pouvons observer que l'instauration d'un delta est importante dans les simulations. Nous allons le vérifier avec l'instauration de delta à 10. 
+
+
+## Distribution du modèle (3) avec une constante $\delta_0 = 10$
+
+
+```{r}
+set.seed(123)
+
+n_simulations <- 10000
+n_obs <- 100
+
+# Fonction pour générer une marche aléatoire avec constante
+generate_random_walk_avec_const <- function(n, delta0) {
+  Yt <- numeric(n)
+  Yt[1] <- delta0  # Initialisation avec la constante
+  for (t in 2:n) {
+    Yt[t] <- Yt[t-1] + rnorm(1)
+  }
+  return(Yt)
+}
+
+# Fonction pour exécuter la simulation et afficher les résultats
+simulation_cst <- function(delta0) {
+  set.seed(123)  # Réinitialisation de la graine pour reproductibilité
+  
+  t_stats <- numeric(n_simulations)  # Réinitialisation à chaque appel
+  
+  for (i in 1:n_simulations) {
+    Yt <- generate_random_walk_avec_const(n_obs, delta0)
+    
+    dYt <- diff(Yt)
+    Yt_lag <- Yt[-n_obs]
+    
+    model <- lm(dYt ~ Yt_lag)  # Régression avec constante par défaut
+    t_stats[i] <- summary(model)$coefficients[2, 3]  # Récupération du t-stat
+  }
+  
+  # Calcul des quantiles (valeurs critiques)
+  quantiles <- quantile(t_stats, c(0.10, 0.05, 0.01))
+  
+  # Affichage graphique
+  hist(t_stats, breaks = 50, probability = TRUE, col = "royalblue", border = "white",
+       main = paste("Distribution Monte Carlo des t-stat de Dickey-Fuller (δ0 =", delta0, ")"),
+       xlab = "Valeur de la statistique t", ylab = "Densité")
+  lines(density(t_stats), col = "royalblue", lwd = 2)
+  abline(v = quantiles, col = c("orange", "red", "darkred"), lwd = 2, lty = 2)
+  legend("topright", legend = c("Densité estimée", "Quantile 10%", "Quantile 5%", "Quantile 1%"),
+         col = c("royalblue", "orange", "red", "darkred"), lwd = 2, cex = 0.5, lty = c(1, 2, 2, 2))
+  
+  # Affichage des valeurs critiques
+  cat("Valeurs critiques obtenues pour δ0 =", delta0, ":\n")
+  print(quantiles)
+}
+
+
+#simulation_cst(delta0 = 5)
+simulation_cst(delta0 = 10)
+```
+
+
+**Interprétation**
+
+En introduisant une constante $\delta_0 = 10$ dans le processus simulé, nous observons que la distribution empirique de la statistique t est nettement déplacée vers la gauche par rapport à la distribution théorique attendue pour le test de Dickey-Fuller avec constante.
+
+| Seuil     | Monte Carlo | Table DF (n = 100) |
+|-----------|-------------|--------------------|
+| 10%       | -2.590     | -1.61              |
+| 5%        | -2.885    | -1.95              |
+| 1%        | -3.476      | -2.60              |
+
+
+Pour cette secponde simulation avec constante, nous pouvons également remarquer que le fait d'introduire une constante influence grandement grandement les résultats de la simulation. 
+
+
+## Conclusion générale
+
+```{r}
+set.seed(123)
+
+n <- 100
+N <- 10000
+
+# Initialisation
+t_none <- numeric(N)
+t_d5 <- numeric(N)
+t_d10 <- numeric(N)
+
+# Simulation : modèle sans constante
+for (i in 1:N) {
+  eps <- rnorm(n)
+  Y <- cumsum(eps)
+  dY <- diff(Y)
+  Y_lag <- Y[-n]
+  model <- lm(dY ~ 0 + Y_lag)
+  t_none[i] <- summary(model)$coefficients[1, 3]
+}
+
+# Simulation : modèle avec constante δ₀ = 5
+for (i in 1:N) {
+  eps <- rnorm(n)
+  Y <- numeric(n)
+  Y[1] <- 5
+  for (t in 2:n) {
+    Y[t] <- Y[t - 1] + eps[t]
+  }
+  dY <- diff(Y)
+  Y_lag <- Y[-n]
+  model <- lm(dY ~ Y_lag)
+  t_d5[i] <- summary(model)$coefficients[2, 3]
+}
+
+# Simulation : modèle avec constante δ₀ = 10
+for (i in 1:N) {
+  eps <- rnorm(n)
+  Y <- numeric(n)
+  Y[1] <- 10
+  for (t in 2:n) {
+    Y[t] <- Y[t - 1] + eps[t]
+  }
+  dY <- diff(Y)
+  Y_lag <- Y[-n]
+  model <- lm(dY ~ Y_lag)
+  t_d10[i] <- summary(model)$coefficients[2, 3]
+}
+
+# Densités
+dens_none <- density(t_none)
+dens_5 <- density(t_d5)
+dens_10 <- density(t_d10)
+
+# Graphique final
+plot(dens_none, col = "darkgreen", lwd = 2,
+     main = expression("Distribution des statistiques t : sans constante vs " * delta[0] * " = 5 et 10"),
+     xlab = "Valeurs de la statistique t", ylab = "Density",
+     xlim = c(-6, 4), ylim = c(0, 0.55))
+lines(dens_5, col = "purple", lwd = 2, lty = 2)
+lines(dens_10, col = "black", lwd = 2, lty = 3)
+
+legend("topright",
+       legend = c("Sans constante", expression(delta[0] == 5), expression(delta[0] == 10)),
+       col = c("darkgreen", "purple", "black"),
+       lty = c(1, 2, 3), lwd = 2, bty = "n")
+
+```
+
+**Interprétation**
+
+Concernant le graphqiue ci dessus, nous observer comme indiqué plus haut, une certaine différence entre le fait de rajouter une constante et de pas en avoir. En effet, avoir une constance entraine que la courbe se décalle vers la gauche. 
+
+Néanmoins, concernnat la différence de  $\delta_0 = 5$ et $\delta_0 = 10$, il n'existe pas dedifférence visuelle. Les deux courbes se suivent.
+
+**Tableau de comparaison**
+
+| Seuil | Sans constante | $\delta_0 = 5$ | $\delta_0 = 10$ | Table DF (n = 100) |
+|-------|----------------|--------|---------|---------------------|
+| 10%   | -1.630          | -2.590 | -2.590  | -1.61               |
+| 5%    | -1.988          | -2.885 | -2.885  | -1.95               |
+| 1%    | -2.633          | -3.476 | -3.476  | -2.60               |
+
+Comme nous pouvons l'observer avec ce tableau, il existe une réélle différence entre le fait d'avoir une constant et non. En effet, avec une constante on s'éloigne des résultats de la table de Dickey-Fuller. 
+
+Néanmoins, entre $\delta_0 = 5$ et $\delta_0 = 10$ il n'existe pas de différence donc la différence se fait suelement sur le fait d'ajouter une constante ou non.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
